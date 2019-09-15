@@ -19,25 +19,28 @@ const static uint8_t PIN_RADIO_CE = 9;
 const static uint8_t PIN_RADIO_CSN = 10;
 
 int modulesAroundID[11];
-int TAMPONmodulesAroundID[21];
-int allModulesID[21];
+int TAMPONmodulesAroundID[11];
+int allModulesID[11];
 
 int len = 1;
 int lenALL = 1;
 
+String echo = "echo";
+
 struct sender {
-  int from = RADIO_ID;
-  int to;
-  String msg;
-  int echoReturned[21];
+  uint8_t from = RADIO_ID;
+  uint8_t to;
+  char command[10];
+  uint32_t echoReturned[11];
 };
 
 struct receiver {
-  int from;
-  int to;
-  String msg;
-  int echoReturned[21];
+  uint8_t from;
+  uint8_t to;
+  char command[10];
+  uint32_t echoReturned[11];
 };
+
 NRFLite _radio;
 sender _Sender;
 receiver _Receiver;
@@ -52,15 +55,17 @@ void setup()
     while (1);
   }
   in_range_detector();
-
-  _Sender.to = 0;
-  _Sender.msg = "echo";
-
   
+  delay(1000);
+  
+  echo.toCharArray(_Sender.command, echo.length() + 1);
+
+
   for (int i = 0; i <= len; i++) {
     if (modulesAroundID[i] != NULL) {
+      _Sender.to = i;
       if (_radio.send((modulesAroundID[i]), &_Sender, sizeof(_Sender))) {
-        Serial.println("SENT to " + String(modulesAroundID[i]) + ", msg == echo");
+        Serial.println("\nSENT to " + String(modulesAroundID[i]) + ", msg == echo");
       }
     }
   }
@@ -69,11 +74,10 @@ void setup()
 void loop()
 {
   if (_radio.hasData()) {
-    Serial.println("hasData");
     _radio.readData(&_Receiver);
-    String msg = String(_Receiver.msg);
-    Serial.println("Message is " + msg);
-    if (msg == "echo") {
+    String mess = String(_Receiver.command);
+    Serial.println("Message is " + mess);
+    if (mess == "echo") {
       Serial.println("**");
       for (int i = 1; allModulesID[i] != NULL; i++) {
         for (int j = 1; j <= 10; j++) {
@@ -84,7 +88,7 @@ void loop()
         lenALL++;
       }
       for (int i = 1; i <= lenALL; i++) {
-        if (TAMPONmodulesAroundID[i] != "") {
+        if (TAMPONmodulesAroundID[i] != "" or TAMPONmodulesAroundID[i] != "0") {
           allModulesID[lenALL + i] = TAMPONmodulesAroundID[i];
         }
       }
@@ -92,10 +96,11 @@ void loop()
     _Sender.to = _Receiver.from;
     for (int k = 1; k <= sizeof(allModulesID); k++) {
       _Sender.echoReturned[k] = allModulesID[k];
+      Serial.println(allModulesID[k]);
     }
 
     if (_radio.send(_Sender.to, &_Sender, sizeof(_Sender))) {
-      Serial.println("SEND echo result");
+      //Serial.println("SEND echo result");
     }
   }
   delay(10);
@@ -104,7 +109,7 @@ void loop()
 void in_range_detector() {
   Serial.println("Scanning...");
   len = 1;
-  for (int testRadio = 1; testRadio <= 10; testRadio++) {
+  for (int testRadio = 1; testRadio <= 100; testRadio++) {
     if (testRadio != RADIO_ID) {
       if (_radio.send(testRadio, &_Sender, sizeof(_Sender))) // Note how '&' must be placed in front of the variable name.
       {
@@ -113,7 +118,7 @@ void in_range_detector() {
         len++;
 
       } else {
-        Serial.println(String(testRadio) + " not in range");
+        //Serial.println(String(testRadio) + " not in range");
       }
     }
   }
