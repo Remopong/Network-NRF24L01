@@ -11,6 +11,7 @@
   GND   -> GND
 
 */
+
 #include <SPI.h>
 #include <NRFLite.h>
 const static uint8_t RADIO_ID = 5;
@@ -18,21 +19,23 @@ int DESTINATION_RADIO_ID;
 const static uint8_t PIN_RADIO_CE = 9;
 const static uint8_t PIN_RADIO_CSN = 10;
 
-String echo = "echo";
-
 struct sender {
   uint8_t from = RADIO_ID;
   uint8_t to;
+  String command;
+  char list[99];
 };
 
 struct receiver {
   uint8_t from;
   uint8_t to;
+  String command;
+  char list[99];
 };
 
 NRFLite _radio;
-sender _Sender;
-receiver _Receiver;
+sender toSend;
+receiver toReceive;
 
 void setup()
 {
@@ -52,17 +55,31 @@ void loop()
 {
   _radio.startRx();
   if (_radio.hasData()) {
-    _radio.readData(&_Receiver);
+    _radio.readData(&toReceive);
+    
   }
   
-  _radio.startSend(_Sender.to, &_Sender, sizeof(_Sender));
+  _radio.startSend(toSend.to, &toSend, sizeof(toSend));
   
-  if (_radio.send(_Sender.to, &_Sender, sizeof(_Sender))) {
-    //Serial.println("SEND echo result");
+  if (_radio.send(toSend.to, &toSend, sizeof(toSend))) {
+    
+
+
   }
+
   delay(10);
+
 }
 
 void in_range_detector() {
   Serial.println("Scanning...");
+  for(int detectorInt = 0; detectorInt <= 99; detectorInt++){
+    if(detectorInt != RADIO_ID){
+      if(_radio.send(detectorInt, &toSend, sizeof(toSend))){
+        toSend.list[detectorInt] = 1;
+      }else{
+        toSend.list[detectorInt] = 0;
+      }
+    }
+  }
 }
