@@ -19,16 +19,21 @@ int DESTINATION_RADIO_ID;
 const static uint8_t PIN_RADIO_CE = 9;
 const static uint8_t PIN_RADIO_CSN = 10;
 
+int table[10];
+int buff[10];
+
 struct sender {
   uint8_t from = RADIO_ID;
   uint8_t to;
   String command;
+  int add;
   char list[99];
 };
 
 struct receiver {
   uint8_t from;
   uint8_t to;
+  int add;
   String command;
   char list[99];
 };
@@ -56,16 +61,15 @@ void loop()
   _radio.startRx();
   if (_radio.hasData()) {
     _radio.readData(&toReceive);
-    
+    if(toReceive.command = "/add"){
+      addmore(toReceive.add);
+    }
   }
+
   
   _radio.startSend(toSend.to, &toSend, sizeof(toSend));
-  
-  if (_radio.send(toSend.to, &toSend, sizeof(toSend))) {
+  _radio.send(toSend.to, &toSend, sizeof(toSend))
     
-
-
-  }
 
   delay(10);
 
@@ -73,7 +77,7 @@ void loop()
 
 void in_range_detector() {
   Serial.println("Scanning...");
-  for(int detectorInt = 0; detectorInt <= 99; detectorInt++){
+  for(int detectorInt = 0; detectorInt <= (sizeof(table) / sizeof(table[0])); detectorInt++){
     if(detectorInt != RADIO_ID){
       if(_radio.send(detectorInt, &toSend, sizeof(toSend))){
         toSend.list[detectorInt] = 1;
@@ -82,4 +86,24 @@ void in_range_detector() {
       }
     }
   }
+}
+
+void addMore(int variator){
+  int buff[variator];
+    for (int a = 0; a <= variator; a++) {
+      buff[a] = table[a];
+    }
+    variator += 30;
+    int table[variator];
+    for (int z = 0; z <= sizeof(buff) / sizeof(buff[0]); z++) {
+      table[z] = buff[z];
+    }
+    for (int j = sizeof(buff) / sizeof(buff[0]); j <= variator; j++) {
+      table[j] =  j;
+    }
+  for (int i = 0; i <= (sizeof(table) / sizeof(table[0])); i++) {
+    Serial.print(table[i]);
+    Serial.print("  ");
+  }
+  Serial.println("Finished");
 }
