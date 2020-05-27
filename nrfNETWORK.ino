@@ -22,20 +22,20 @@ const static uint8_t PIN_RADIO_CSN = 10;
 int table[10];
 int buff[10];
 
+byte list[99];
+
 struct sender {
   uint8_t from = RADIO_ID;
   uint8_t to;
+  int number;
   String command;
-  int add;
-  char list[99];
 };
 
 struct receiver {
   uint8_t from;
   uint8_t to;
-  int add;
+  int number;
   String command;
-  char list[99];
 };
 
 NRFLite _radio;
@@ -50,6 +50,7 @@ void setup()
     Serial.println("radio error");
     while (1);
   }
+  
   in_range_detector();
 
   delay(1000);
@@ -62,15 +63,13 @@ void loop()
   if (_radio.hasData()) {
     _radio.readData(&toReceive);
     if(toReceive.command = "/add"){
-      addmore(toReceive.add);
+      addMore(toReceive.number);
     }
   }
 
-  
   _radio.startSend(toSend.to, &toSend, sizeof(toSend));
-  _radio.send(toSend.to, &toSend, sizeof(toSend))
+  _radio.send(toSend.to, &toSend, sizeof(toSend));
     
-
   delay(10);
 
 }
@@ -80,9 +79,9 @@ void in_range_detector() {
   for(int detectorInt = 0; detectorInt <= (sizeof(table) / sizeof(table[0])); detectorInt++){
     if(detectorInt != RADIO_ID){
       if(_radio.send(detectorInt, &toSend, sizeof(toSend))){
-        toSend.list[detectorInt] = 1;
+        list[detectorInt] = 1;
       }else{
-        toSend.list[detectorInt] = 0;
+        list[detectorInt] = 0;
       }
     }
   }
@@ -93,7 +92,7 @@ void addMore(int variator){
     for (int a = 0; a <= variator; a++) {
       buff[a] = table[a];
     }
-    variator += 30;
+    variator += toReceive.number;
     int table[variator];
     for (int z = 0; z <= sizeof(buff) / sizeof(buff[0]); z++) {
       table[z] = buff[z];
